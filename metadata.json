@@ -1,0 +1,6 @@
+{
+  "name": "PrecisionRx",
+  "description": "Precision medicine platform analyzing genetic markers, pharmacogenomics drug interactions, longitudinal health trends, symptom screening for chronic conditions and infections, and HIPAA-compliant provider communication.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
