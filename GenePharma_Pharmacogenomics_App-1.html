@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenePharma — Pharmacogenomics</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f7fb;color:#17324d}
+.app{max-width:1100px;margin:auto;min-height:100vh;background:white}
+header{padding:22px 24px;background:#123d5a;color:white;display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:24px;font-weight:700}.tag{font-size:12px;opacity:.85}
+nav{display:flex;gap:8px;padding:12px 18px;border-bottom:1px solid #ddd;overflow:auto}
+nav button,.primary,.secondary{border:0;border-radius:10px;padding:11px 16px;cursor:pointer;font-weight:600}
+nav button{background:#edf3f7;color:#234}.active,.primary{background:#1976a8!important;color:white}
+main{padding:24px}.screen{display:none}.screen.show{display:block}
+.hero{background:#e7f5fb;padding:28px;border-radius:18px;margin-bottom:22px}
+h1{margin:0 0 10px;font-size:30px}h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.card{border:1px solid #dbe5ec;border-radius:16px;padding:18px;background:#fff;box-shadow:0 2px 8px #17324d10}
+label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #bdcbd5;border-radius:9px;font-size:15px}
+.primary{margin-top:18px}.secondary{background:#edf3f7;margin-top:18px}
+.result{padding:18px;border-radius:14px;background:#eef8f1;border-left:5px solid #29945c;margin:15px 0}
+.warning{background:#fff7e8;border-left-color:#d88919}.muted{color:#607485;font-size:13px}
+.badge{display:inline-block;padding:5px 9px;border-radius:20px;background:#e4f2f8;color:#176184;font-size:12px;font-weight:bold}
+table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left;font-size:14px}
+footer{padding:20px;text-align:center;color:#64798a;font-size:12px}
+@media(max-width:600px){main{padding:16px}header{padding:18px}.logo{font-size:20px}h1{font-size:25px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div><div class="logo">🧬 GenePharma</div><div class="tag">Pharmacogenomics Learning & Decision-Support Prototype</div></div></header>
+
+<nav>
+<button class="active" onclick="show('home',this)">Home</button>
+<button onclick="show('profile',this)">Profile</button>
+<button onclick="show('genes',this)">Genetic Data</button>
+<button onclick="show('analysis',this)">Analysis</button>
+<button onclick="show('report',this)">Report</button>
+</nav>
+
+<main>
+<section id="home" class="screen show">
+<div class="hero">
+<h1>Personalized medicine through pharmacogenomics</h1>
+<p>Explore how genetic variation can influence medicine response.</p>
+<button class="primary" onclick="show('profile')">Start Analysis</button>
+</div>
+<div class="grid">
+<div class="card"><h3>🧑 Patient Profile</h3><p>Store basic information and current medicines.</p></div>
+<div class="card"><h3>🧬 Gene Analysis</h3><p>Enter an example pharmacogenomic result.</p></div>
+<div class="card"><h3>💊 Drug–Gene Links</h3><p>Learn how genes can affect drug metabolism or response.</p></div>
+<div class="card"><h3>📄 Report</h3><p>Generate a simple educational summary.</p></div>
+</div>
+</section>
+
+<section id="profile" class="screen">
+<h2>Patient Profile</h2>
+<div class="card">
+<div class="grid">
+<div><label>Name</label><input id="name" placeholder="Enter name"></div>
+<div><label>Age</label><input id="age" type="number" min="0" placeholder="Age"></div>
+<div><label>Sex</label><select id="sex"><option>Not specified</option><option>Female</option><option>Male</option><option>Other</option></select></div>
+<div><label>Weight (kg)</label><input id="weight" type="number" placeholder="Optional"></div>
+<div><label>Condition</label><input id="condition" placeholder="e.g. Hypertension"></div>
+<div><label>Current medicines</label><input id="meds" placeholder="Optional"></div>
+</div>
+<button class="primary" onclick="saveProfile()">Continue to Genetic Data</button>
+</div>
+</section>
+
+<section id="genes" class="screen">
+<h2>Genetic Information</h2>
+<div class="card">
+<label>Gene</label>
+<select id="gene" onchange="updateGene()">
+<option value="CYP2D6">CYP2D6</option><option value="CYP2C19">CYP2C19</option>
+<option value="TPMT">TPMT</option><option value="HLA-B">HLA-B</option>
+</select>
+<label>Result / activity category</label>
+<select id="phenotype"></select>
+<div id="geneInfo" class="result"></div>
+<button class="primary" onclick="runAnalysis()">Analyze Result</button>
+</div>
+</section>
+
+<section id="analysis" class="screen">
+<h2>Pharmacogenomic Analysis</h2>
+<div id="analysisBox"></div>
+<button class="secondary" onclick="show('report')">View Report</button>
+</section>
+
+<section id="report" class="screen">
+<h2>Patient Report</h2>
+<div id="reportBox" class="card"></div>
+<button class="primary" onclick="window.print()">Print / Save as PDF</button>
+</section>
+</main>
+<footer>Educational prototype only. It does not diagnose disease, prescribe medicines, or replace a qualified healthcare professional or validated clinical pharmacogenomic guideline.</footer>
+</div>
+
+<script>
+const data={
+"CYP2D6":{
+options:["Poor metabolizer","Intermediate metabolizer","Normal metabolizer","Ultrarapid metabolizer"],
+info:"CYP2D6 helps metabolize many medicines. Genetic differences can change enzyme activity and therefore alter exposure or response to some drugs.",
+drugs:"Examples include codeine, tramadol and some antidepressants. Clinical interpretation depends on the specific medicine and guideline."
+},
+"CYP2C19":{
+options:["Poor metabolizer","Intermediate metabolizer","Normal metabolizer","Rapid/Ultrarapid metabolizer"],
+info:"CYP2C19 contributes to metabolism of several medicines. Genetic differences can affect how quickly some medicines are processed.",
+drugs:"Examples include clopidogrel and some proton-pump inhibitors. Interpretation should follow a current clinical guideline."
+},
+"TPMT":{
+options:["Low activity","Intermediate activity","Normal activity"],
+info:"TPMT is involved in thiopurine metabolism. Genetic variation can influence tolerance to thiopurine medicines.",
+drugs:"Examples include azathioprine and thioguanine. Clinical testing and professional interpretation are important."
+},
+"HLA-B":{
+options:["Variant detected","Variant not detected","Result unavailable"],
+info:"Certain HLA-B variants are associated with serious adverse reactions to specific medicines.",
+drugs:"Examples include HLA-B*57:01 with abacavir and HLA-B*15:02 with certain medicines. The relevant variant and medicine must be matched carefully."
+}};
+let result={};
+
+function show(id,btn){
+document.querySelectorAll('.screen').forEach(x=>x.classList.remove('show'));
+document.getElementById(id).classList.add('show');
+if(btn){document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active')}
+if(id==='genes')updateGene(); if(id==='analysis')renderAnalysis(); if(id==='report')renderReport();
+}
+function saveProfile(){
+result.profile={name:document.getElementById('name').value||"Not provided",age:document.getElementById('age').value||"Not provided",sex:document.getElementById('sex').value,weight:document.getElementById('weight').value||"Not provided",condition:document.getElementById('condition').value||"Not provided",meds:document.getElementById('meds').value||"Not provided"};
+show('genes');
+}
+function updateGene(){
+let g=document.getElementById('gene').value,p=document.getElementById('phenotype');
+p.innerHTML=data[g].options.map(x=>`<option>${x}</option>`).join('');
+document.getElementById('geneInfo').innerHTML=`<b>${g}</b><br>${data[g].info}<br><br><b>Examples:</b> ${data[g].drugs}`;
+}
+function runAnalysis(){
+result.gene=document.getElementById('gene').value;result.phenotype=document.getElementById('phenotype').value;
+renderAnalysis();show('analysis');
+}
+function renderAnalysis(){
+if(!result.gene){document.getElementById('analysisBox').innerHTML='<div class="card">Complete the profile and genetic-data sections first.</div>';return}
+let d=data[result.gene], caution=(result.gene==='HLA-B'&&result.phenotype==='Variant detected')||result.phenotype.includes('Poor')||result.phenotype.includes('Low');
+document.getElementById('analysisBox').innerHTML=`<div class="result ${caution?'warning':''}">
+<span class="badge">${result.gene}</span>
+<h3>${result.phenotype}</h3>
+<p>${d.info}</p>
+<p><b>Drug examples:</b> ${d.drugs}</p>
+<p><b>Interpretation:</b> This result may be clinically relevant for some medicines. The app does not select a drug or dose. A qualified healthcare professional should interpret the validated genetic test together with the medicine, diagnosis, other medications and current clinical guidelines.</p>
+</div>
+<div class="card"><h3>Next step</h3><p>Verify the laboratory result and consult an appropriate pharmacogenomic guideline before any treatment decision.</p></div>`;
+}
+function renderReport(){
+let p=result.profile||{name:"Not provided",age:"Not provided",sex:"Not specified",weight:"Not provided",condition:"Not provided",meds:"Not provided"};
+document.getElementById('reportBox').innerHTML=`
+<h3>GenePharma Pharmacogenomics Report</h3>
+<table><tr><th>Patient</th><td>${p.name}</td></tr><tr><th>Age</th><td>${p.age}</td></tr><tr><th>Sex</th><td>${p.sex}</td></tr><tr><th>Weight</th><td>${p.weight}</td></tr><tr><th>Condition</th><td>${p.condition}</td></tr><tr><th>Current medicines</th><td>${p.meds}</td></tr><tr><th>Gene</th><td>${result.gene||"Not entered"}</td></tr><tr><th>Genetic result</th><td>${result.phenotype||"Not entered"}</td></tr></table>
+<h4>Summary</h4><p>${result.gene?data[result.gene].info:"No genetic result entered."}</p>
+<p class="muted">This is an educational prototype and not a medical diagnosis or prescription.</p>`;
+}
+updateGene();
+</script>
+</body>
+</html>
